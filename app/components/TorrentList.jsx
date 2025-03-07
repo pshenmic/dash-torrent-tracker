@@ -8,6 +8,7 @@ import { NavLink } from 'react-router'
 export default function TorrentList () {
   const [torrents, setTorrents] = useState([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     setLoading(true)
@@ -24,7 +25,7 @@ export default function TorrentList () {
           return new Torrent(name, description, magnet, owner, timestamp)
         }))
       })
-      .catch(console.error)
+      .catch((e) => setError(e.toString()))
       .finally(() => setLoading(false))
   }, [])
 
@@ -47,45 +48,47 @@ export default function TorrentList () {
             </div>
           </div>
         </div>
-        :
-        <div
-          className="relative flex flex-col w-full h-full overflow-scroll text-gray-700 bg-white shadow-md bg-clip-border">
-          <table className="w-full text-left table-auto min-w-max text-slate-800">
-            <thead>
-            <tr className="text-slate-500 border-b border-slate-300 bg-slate-50">
-              <th className="p-4">
-                <p className="text-sm leading-none font-normal">
-                  Name
-                </p>
-              </th>
-              <th className="p-4">
-                <p className="text-sm leading-none font-normal">
-                  Description
-                </p>
-              </th>
-              <th className="p-4">
-                <p className="text-sm leading-none font-normal">
-                  Magnet Link
-                </p>
-              </th>
-              <th className="p-4">
-                <p className="text-sm leading-none font-normal">
-                  Owner
-                </p>
-              </th>
-              <th className="p-4">
-                <p className="text-sm leading-none font-normal">
-                  Timestamp
-                </p>
-              </th>
-            </tr>
-            </thead>
-            <tbody>
-            {torrents.map((torrent, index) => <TorrentListItem key={index} torrent={torrent}/>)}
-            </tbody>
-          </table>
-        </div>
+        : <div/>
     }
+    {!loading && !error ? <div
+      className="relative flex flex-col w-full h-full overflow-scroll text-gray-700 bg-white shadow-md bg-clip-border">
+      <table className="w-full text-left table-auto min-w-max text-slate-800">
+        <thead>
+        <tr className="text-slate-500 border-b border-slate-300 bg-slate-50">
+          <th className="p-4">
+            <p className="text-sm leading-none font-normal">
+              Name
+            </p>
+          </th>
+          <th className="p-4">
+            <p className="text-sm leading-none font-normal">
+              Description
+            </p>
+          </th>
+          <th className="p-4">
+            <p className="text-sm leading-none font-normal">
+              Magnet Link
+            </p>
+          </th>
+          <th className="p-4">
+            <p className="text-sm leading-none font-normal">
+              Owner
+            </p>
+          </th>
+          <th className="p-4">
+            <p className="text-sm leading-none font-normal">
+              Timestamp
+            </p>
+          </th>
+        </tr>
+        </thead>
+        <tbody>
+        {torrents.map((torrent, index) => <TorrentListItem key={index} torrent={torrent}/>)}
+        </tbody>
+      </table>
+    </div> : <div/>}
+
+    {error ? <div className={"leading-none font-normal text-lg pt-12"}>Error during submit: {error}</div> : <div/>}
   </div>
 
 }
