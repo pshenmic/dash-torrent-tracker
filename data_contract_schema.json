@@ -1,0 +1,33 @@
+{
+  "torrent": {
+    "type": "object",
+    "properties": {
+      "magnet": {
+        "position": 0,
+        "type": "string",
+        "description": "Magnet links used in BitTorrent protocol",
+        "minLength": 16,
+        "maxLength": 160
+      },
+      "name": {
+        "position": 1,
+        "type": "string",
+        "description": "Name of the distributed torrent",
+        "minLength": 6,
+        "maxLength": 160
+      },
+      "description": {
+        "position": 2,
+        "type": "string",
+        "description": "Description for a given torrent file",
+        "minLength": 16,
+        "maxLength": 160
+      }
+    },
+    "required": [
+      "$createdAt",
+      "$updatedAt"
+    ],
+    "additionalProperties": false
+  }
+}
