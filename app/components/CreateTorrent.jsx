@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Torrent } from '../models/Torrent'
 import schema from '../../data_contract_schema.json';
 import { base58 } from '@scure/base';
 import * as PEApi from '../utils/Api'
+import { useNavigate } from 'react-router'
 
 const DATA_CONTRACT_IDENTIFIER = '6hVQW16jyvZyGSQk2YVty4ND6bgFXozizYWnPt753uW5'
 
@@ -11,6 +11,7 @@ let documentFactory
 let identityPublicKeyClass
 
 export default function CreateTorrent () {
+  let navigate = useNavigate();
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -45,8 +46,6 @@ export default function CreateTorrent () {
   const handleSubmit = async e => {
 
     try {
-      const torrent = new Torrent(form.name, form.description,form.magnet, form.identity, new Date())
-
       const identity = await PEApi.getIdentity(form.identity)
 
       const [identityPublicKey] = identity.publicKeys.filter((publicKey) => String(publicKey.keyId) === form.keyId)
@@ -77,6 +76,8 @@ export default function CreateTorrent () {
       );
 
       await PEApi.broadcastTx(stateTransition.toBuffer().toString('base64'))
+
+      navigate('/')
     } catch (e) {
       setError(e.toString())
       console.error('Error during submit:', e)
