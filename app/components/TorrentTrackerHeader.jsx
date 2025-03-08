@@ -1,4 +1,4 @@
-import { NavLink, redirect } from 'react-router'
+import { NavLink } from 'react-router'
 
 export default function TorrentTrackerHeader() {
   return <div className="space-y-2 text-center sm:text-left">

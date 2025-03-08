@@ -20,6 +20,10 @@ const call = async (path, method, body) => {
       return response.json()
     } else if (response.status === 404) {
       throw new Error(`Request to Platform Explorer [${method}] ${path} failed with error Not Found (HTTP 404)`)
+    } else if (response.status === 400) {
+      const {error} = await response.json()
+
+      throw new Error(error)
     } else {
       const text = await response.text()
       console.error(text)
@@ -112,8 +116,8 @@ const getTransfersByIdentity = (identifier, page = 1, limit = 10, order = 'asc')
 const getIdentity = (identifier) => {
   return call(`identity/${identifier}`, 'GET')
 }
-const getIdentityContractNonce = (identifier) => {
-  return call(`identity/${identifier}/identityContractNonce`, 'GET')
+const getIdentityContractNonce = (dataContractIdentifier, identifier) => {
+  return call(`identity/${identifier}/contract/${dataContractIdentifier}/nonce`, 'GET')
 }
 
 const getIdentities = (page = 1, limit = 30, order = 'asc', orderBy) => {

@@ -6,10 +6,11 @@ import * as PEApi from '../utils/Api'
 
 const DATA_CONTRACT_IDENTIFIER = '6hVQW16jyvZyGSQk2YVty4ND6bgFXozizYWnPt753uW5'
 
+let dataContractFactory
+let documentFactory
+let identityPublicKeyClass
+
 export default function CreateTorrent () {
-  let dataContractFactory
-  let documentFactory
-  let identityPublicKeyClass
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -47,7 +48,14 @@ export default function CreateTorrent () {
       const torrent = new Torrent(form.name, form.description,form.magnet, form.identity, new Date())
 
       const identity = await PEApi.getIdentity(form.identity)
-      const identityContractNonce = await PEApi.getIdentityContractNonce(form.identity)
+
+      const [identityPublicKey] = identity.publicKeys.filter((publicKey) => String(publicKey.keyId) === form.keyId)
+
+      if (!identityPublicKey) {
+        throw new Error(`Could not find identity public key with id ${form.keyId} in the identity ${form.identity}`)
+      }
+
+      const {identityContractNonce} = await PEApi.getIdentityContractNonce(DATA_CONTRACT_IDENTIFIER, form.identity)
 
       const dataContract = await dataContractFactory.create(base58.decode(form.identity), BigInt(1), schema)
 
@@ -57,22 +65,19 @@ export default function CreateTorrent () {
         magnet: form.magnet
       })
 
-      const identityPublicKey = identityPublicKeyClass.fromBuffer(Buffer.from(identity.raw, 'hex'))
-
       const stateTransition = documentFactory.createStateTransition({ create: [document] }, {
         [form.identity]: {
-          [DATA_CONTRACT_IDENTIFIER]: "1",
+          [DATA_CONTRACT_IDENTIFIER]: (BigInt(identityContractNonce) + BigInt(1)).toString(10),
         },
       });
 
       stateTransition.sign(
-        identityPublicKey,
+        identityPublicKeyClass.fromBuffer(Buffer.from(identityPublicKey.raw, 'hex')),
         Buffer.from(form.privateKey, 'hex'),
       );
 
-      console.log('stateTransition', stateTransition.toBuffer().toString('hex'))
-      console.log('stateTransition', stateTransition.toBuffer().toString('base64'))
-    }catch (e) {
+      await PEApi.broadcastTx(stateTransition.toBuffer().toString('base64'))
+    } catch (e) {
       setError(e.toString())
       console.error('Error during submit:', e)
     }
@@ -115,6 +120,15 @@ export default function CreateTorrent () {
                onChange={(e) => handleInputChange('identity', e)}
                value={form.identity}
                placeholder={"BjixEUbqeUZK7BRdqtLgjzwFBovx4BRwS2iwhMriiYqp"}
+        />
+      </div>
+
+      <div>
+        <div className={'text-sm leading-none font-normal text-lg pb-2 pt-2'}>Identity Public Key ID:</div>
+        <input type={'text'} className={'border-2 border-gray-700 rounded-lg p-2 w-full'}
+               onChange={(e) => handleInputChange('keyId', e)}
+               value={form.keyId}
+               placeholder={"1"}
         />
       </div>
 
