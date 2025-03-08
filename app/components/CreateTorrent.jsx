@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
-import schema from '../../data_contract_schema.json';
-import { base58 } from '@scure/base';
 import * as PEApi from '../utils/Api'
 import { useNavigate } from 'react-router'
 
 const DATA_CONTRACT_IDENTIFIER = '6hVQW16jyvZyGSQk2YVty4ND6bgFXozizYWnPt753uW5'
 
 let dataContractFactory
+let dataContractFacade
 let documentFactory
 let identityPublicKeyClass
 
@@ -15,16 +14,18 @@ export default function CreateTorrent () {
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [action, setAction] = useState('create')
 
   useEffect( () => {
     const run = async () => {
       const WASMDPP = await import('@dashevo/wasm-dpp')
       await WASMDPP.default()
-      const {DocumentFactory, DataContractFactory, Identifier, IdentityPublicKey} = WASMDPP
+      const {DocumentFactory, DataContractFactory, DataContractFacade, Identifier, IdentityPublicKey} = WASMDPP
 
       identityPublicKeyClass = IdentityPublicKey
 
       dataContractFactory = new DataContractFactory(7)
+      dataContractFacade = new DataContractFacade(7)
       documentFactory = new DocumentFactory(7)
     }
 
@@ -43,6 +44,11 @@ export default function CreateTorrent () {
   const handleInputChange = (key, e) => {
     setForm({...form, [key]: e.target.value})
   }
+
+  const setDocumentAction = (action) => {
+    setAction(action)
+  }
+
   const handleSubmit = async e => {
 
     try {
@@ -56,15 +62,25 @@ export default function CreateTorrent () {
 
       const {identityContractNonce} = await PEApi.getIdentityContractNonce(DATA_CONTRACT_IDENTIFIER, form.identity)
 
-      const dataContract = await dataContractFactory.create(base58.decode(form.identity), BigInt(1), schema)
+      const {base64} = await PEApi.getRawDataContract(DATA_CONTRACT_IDENTIFIER)
 
-      const document = await documentFactory.create(dataContract, form.identity, 'torrent', {
-        name: form.name,
-        description: form.description,
-        magnet: form.magnet
-      })
+      const dataContract = await dataContractFactory.createFromBuffer(Buffer.from(base64, 'base64'))
 
-      const stateTransition = documentFactory.createStateTransition({ create: [document] }, {
+      let document
+
+      if (action === 'create') {
+        document = await documentFactory.create(dataContract, form.identity, 'torrent', {
+          name: form.name,
+          description: form.description,
+          magnet: form.magnet
+        })
+      } else {
+        const {base64} = await PEApi.getRawDocument(form.identifier, DATA_CONTRACT_IDENTIFIER, 'torrent')
+
+        document = await documentFactory.createExtendedDocumentFromDocumentBuffer(Buffer.from(base64, 'base64'), 'torrent', dataContract)
+      }
+
+      const stateTransition = documentFactory.createStateTransition({ [action]: [document] }, {
         [form.identity]: {
           [DATA_CONTRACT_IDENTIFIER]: (BigInt(identityContractNonce) + BigInt(1)).toString(10),
         },
@@ -85,15 +101,33 @@ export default function CreateTorrent () {
   }
 
   return <div>
-    {error ? <div className={"leading-none font-normal text-lg pt-12"}>Error during submit: {error}</div> : <div/>}
+    <div className={"mb-6"}>
+      <button className={`rounded-xl mt-4 p-2 ml-2 ${action === 'create' ? 'bg-blue-700': 'bg-blue-400'}`}
+              onClick={() => setDocumentAction('create')}>Create torrent
+      </button>
+      <button className={`rounded-xl mt-4 p-2 ml-2 ${action === 'replace' ? 'bg-yellow-700': 'bg-yellow-400'}`}
+              onClick={() => setDocumentAction('replace')}>Update torrent</button>
+      <button className={`rounded-xl mt-4 p-2 ml-2 ${action === 'delete' ? 'bg-red-700': 'bg-red-400'}`}
+              onClick={() => setDocumentAction('delete')}>Delete torrent</button>
+    </div>
+    {error ? <div className={'leading-none font-normal text-lg pt-12'}>Error during submit: {error}</div> : <div/>}
     {loading ? <div className={"leading-none font-normal text-lg pt-12"}>Loading WASM DPP</div> : <div/>}
     {!loading && !error ? <div className={'flex flex-col'}>
+        {action !== 'create' ? <div>
+          <div className={'text-sm leading-none font-normal pb-2'}>Torrent Identifier:</div>
+          <input type={'text'} className={'border-2 border-gray-700 rounded-lg p-2 w-full'}
+                 onChange={(e) => handleInputChange('identifier', e)}
+                 value={form.identifier}
+                 placeholder={'5Quf1y4GrqygGLLUwNHntxHBCguvUiVaMv2kWh7HNFAd'}
+          />
+        </div> : <div/>}
+
       <div>
         <div className={'text-sm leading-none font-normal pb-2'}>Name:</div>
         <input type={'text'} className={'border-2 border-gray-700 rounded-lg p-2 w-full'}
                onChange={(e) => handleInputChange('name', e)}
                value={form.name}
-               placeholder={"Torrent name"}
+               placeholder={'Torrent name'}
         />
       </div>
 

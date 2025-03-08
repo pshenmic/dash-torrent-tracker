@@ -17,13 +17,17 @@ export default function TorrentList () {
         const { resultSet } = result
 
         setTorrents(resultSet.map(document => {
+          if(!document.data) {
+            return null
+          }
+
           const data = JSON.parse(document.data)
           const owner = document.owner
           const timestamp = document.timestamp
           const { magnet, name, description } = data
 
           return new Torrent(name, description, magnet, owner, timestamp)
-        }))
+        }).filter(e => !!e))
       })
       .catch((e) => setError(e.toString()))
       .finally(() => setLoading(false))

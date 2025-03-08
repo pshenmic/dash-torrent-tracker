@@ -64,6 +64,10 @@ const getDataContractByIdentifier = (identifier) => {
   return call(`dataContract/${identifier}`, 'GET')
 }
 
+const getRawDataContract = (identifier) => {
+  return call(`dataContract/${identifier}/raw`, 'GET')
+}
+
 const getDataContractTransactions = (identifier, page = 1, limit = 30, order = 'asc') => {
   return call(`dataContract/${identifier}/transactions?page=${page}&limit=${limit}&order=${order}`, 'GET')
 }
@@ -79,6 +83,15 @@ const getDocumentByIdentifier = (identifier, dataContractId, typeName) => {
   const queryParams = params.join('&')
 
   return call(`document/${identifier}?${queryParams ? `?${queryParams}` : ''}`, 'GET')
+}
+
+const getRawDocument = (identifier, dataContractId, typeName) => {
+  const params = []
+  if (dataContractId) params.push(`contract_id=${dataContractId}`)
+  if (typeName) params.push(`document_type_name=${typeName}`)
+  const queryParams = params.join('&')
+
+  return call(`document/${identifier}/raw?${queryParams ? `${queryParams}` : ''}`, 'GET')
 }
 
 const getDocumentRevisions = (identifier, page = 1, limit = 30, order = 'asc') => {
@@ -169,6 +182,7 @@ export {
   getTransaction,
   search,
   decodeTx,
+  getRawDataContract,
   getDocumentsByDataContract,
   getDocumentByIdentifier,
   getDocumentRevisions,
@@ -190,5 +204,6 @@ export {
   getRewardsStatsByValidator,
   getEpoch,
   getRate,
-  broadcastTx
+  broadcastTx,
+  getRawDocument
 }
