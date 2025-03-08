@@ -80,6 +80,14 @@ export default function CreateTorrent () {
         document = await documentFactory.createExtendedDocumentFromDocumentBuffer(Buffer.from(base64, 'base64'), 'torrent', dataContract)
       }
 
+      if (action === 'replace') {
+        document.setData({
+          name: form.name,
+          description: form.description,
+          magnet: form.magnet
+        })
+      }
+
       const stateTransition = documentFactory.createStateTransition({ [action]: [document] }, {
         [form.identity]: {
           [DATA_CONTRACT_IDENTIFIER]: (BigInt(identityContractNonce) + BigInt(1)).toString(10),
