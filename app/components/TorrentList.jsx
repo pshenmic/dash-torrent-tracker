@@ -22,11 +22,10 @@ export default function TorrentList () {
           }
 
           const data = JSON.parse(document.data)
-          const owner = document.owner
-          const timestamp = document.timestamp
+          const {identifier, owner,  timestamp} = document
           const { magnet, name, description } = data
 
-          return new Torrent(name, description, magnet, owner, timestamp)
+          return new Torrent(identifier, name, description, magnet, owner, timestamp)
         }).filter(e => !!e))
       })
       .catch((e) => setError(e.toString()))
@@ -59,6 +58,11 @@ export default function TorrentList () {
       <table className="w-full text-left table-auto min-w-max text-slate-800">
         <thead>
         <tr className="text-slate-500 border-b border-slate-300 bg-slate-50">
+          <th className="p-4">
+            <p className="text-sm leading-none font-normal">
+              Identifier
+            </p>
+          </th>
           <th className="p-4">
             <p className="text-sm leading-none font-normal">
               Name
