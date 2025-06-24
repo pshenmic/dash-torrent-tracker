@@ -85,29 +85,71 @@ export default function CreateTorrent () {
         </p>
       </div>
 
-
-      {/* Error Message */}
-      {error && (
-        <div className="mb-6 rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
+      {/* Extension Warning */}
+      {!extensionLoaded && (
+        <div className="mb-8 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/50 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <svg 
+                className="h-5 w-5 text-amber-400 dark:text-amber-500" 
+                viewBox="0 0 20 20" 
+                fill="currentColor"
+              >
+                <path 
+                  fillRule="evenodd" 
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" 
+                  clipRule="evenodd" 
+                />
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error during submit</h3>
-              <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                <p>{error}</p>
+              <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                Dash Platform Extension Required
+              </h3>
+              <div className="mt-2 text-sm text-amber-700 dark:text-amber-300">
+                <p>
+                  Dash Platform extension is not loaded. You must install the extension in order to make write actions.
+                </p>
+                <p className="mt-2">
+                  <a 
+                    href="#" 
+                    className="font-medium underline hover:text-amber-800 dark:hover:text-amber-200"
+                  >
+                    Learn how to install the extension →
+                  </a>
+                </p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Form Fields */}
-      {!error && (
-        <form className="space-y-6">
+
+      {/* Show form only if extension is loaded */}
+      {extensionLoaded && (
+        <>
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error during submit</h3>
+                  <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                    <p>{error}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Form Fields */}
+          {!error && (
+            <form className="space-y-6">
 
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -211,7 +253,8 @@ export default function CreateTorrent () {
             <button
               type="button"
               onClick={handleSubmit}
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all hover:shadow-lg"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary-600"
+              disabled={!extensionLoaded}
             >
               <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -219,7 +262,9 @@ export default function CreateTorrent () {
               Create Torrent
             </button>
           </div>
-        </form>
+            </form>
+          )}
+        </>
       )}
     </div>
   )
