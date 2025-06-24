@@ -25,14 +25,14 @@ export const links = () => [
 
 export function Layout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="h-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -62,14 +62,24 @@ export function ErrorBoundary({ error }) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
+    <main className="min-h-screen flex items-center justify-center px-4 py-16">
+      <div className="max-w-md w-full space-y-8 text-center">
+        <div className="space-y-4">
+          <h1 className="text-6xl font-bold text-gray-900 dark:text-white">{message}</h1>
+          <p className="text-lg text-gray-600 dark:text-gray-400">{details}</p>
+          {stack && (
+            <pre className="mt-8 w-full p-4 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-x-auto text-left text-sm text-gray-700 dark:text-gray-300">
+              <code>{stack}</code>
+            </pre>
+          )}
+        </div>
+        <a
+          href="/"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+        >
+          Go back home
+        </a>
+      </div>
     </main>
   );
 }

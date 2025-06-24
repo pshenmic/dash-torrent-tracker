@@ -3,6 +3,8 @@ import * as PEApi from '../utils/Api'
 import { useNavigate } from 'react-router'
 
 const DATA_CONTRACT_IDENTIFIER = '6hVQW16jyvZyGSQk2YVty4ND6bgFXozizYWnPt753uW5'
+const DOCUMENT_TYPE = 'torrent'
+
 
 let dataContractFactory
 let dataContractFacade
@@ -12,21 +14,17 @@ let identityPublicKeyClass
 export default function CreateTorrent () {
   let navigate = useNavigate();
 
+  const [extensionLoaded, setExtensionLoaded] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [action, setAction] = useState('create')
 
   useEffect( () => {
+    const {dashPlatformSDK} = window
+
+    setExtensionLoaded(!!dashPlatformSDK)
+
     const run = async () => {
-      const WASMDPP = await import('@dashevo/wasm-dpp')
-      await WASMDPP.default()
-      const {DocumentFactory, DataContractFactory, DataContractFacade, Identifier, IdentityPublicKey} = WASMDPP
 
-      identityPublicKeyClass = IdentityPublicKey
-
-      dataContractFactory = new DataContractFactory(7)
-      dataContractFacade = new DataContractFacade(7)
-      documentFactory = new DocumentFactory(7)
     }
 
     setLoading(true)
@@ -38,6 +36,7 @@ export default function CreateTorrent () {
     description: '',
     identity: '',
     magnet: '',
+    keyId: "1",
     privateKey: ''
   })
 
@@ -45,148 +44,183 @@ export default function CreateTorrent () {
     setForm({...form, [key]: e.target.value})
   }
 
-  const setDocumentAction = (action) => {
-    setAction(action)
-  }
-
   const handleSubmit = async e => {
 
     try {
-      const identity = await PEApi.getIdentity(form.identity)
-
-      const [identityPublicKey] = identity.publicKeys.filter((publicKey) => String(publicKey.keyId) === form.keyId)
-
-      if (!identityPublicKey) {
-        throw new Error(`Could not find identity public key with id ${form.keyId} in the identity ${form.identity}`)
-      }
-
-      const {identityContractNonce} = await PEApi.getIdentityContractNonce(DATA_CONTRACT_IDENTIFIER, form.identity)
-
-      const {base64} = await PEApi.getRawDataContract(DATA_CONTRACT_IDENTIFIER)
-
-      const dataContract = await dataContractFactory.createFromBuffer(Buffer.from(base64, 'base64'))
-
-      let document
-
-      if (action === 'create') {
-        document = await documentFactory.create(dataContract, form.identity, 'torrent', {
-          name: form.name,
-          description: form.description,
-          magnet: form.magnet
-        })
-      } else {
-        const {base64} = await PEApi.getRawDocument(form.identifier, DATA_CONTRACT_IDENTIFIER, 'torrent')
-
-        document = await documentFactory.createExtendedDocumentFromDocumentBuffer(Buffer.from(base64, 'base64'), 'torrent', dataContract)
-      }
-
-      if (action === 'replace') {
-        document.setData({
-          name: form.name,
-          description: form.description,
-          magnet: form.magnet
-        })
-      }
-
-      const stateTransition = documentFactory.createStateTransition({ [action]: [document] }, {
-        [form.identity]: {
-          [DATA_CONTRACT_IDENTIFIER]: (BigInt(identityContractNonce) + BigInt(1)).toString(10),
-        },
-      });
-
-      stateTransition.sign(
-        identityPublicKeyClass.fromBuffer(Buffer.from(identityPublicKey.raw, 'hex')),
-        Buffer.from(form.privateKey, 'hex'),
-      );
-
-      await PEApi.broadcastTx(stateTransition.toBuffer().toString('base64'))
-
-      navigate('/')
+      // const identity = await PEApi.getIdentity(form.identity)
+      //
+      // const [identityPublicKey] = identity.publicKeys.filter((publicKey) => String(publicKey.keyId) === form.keyId)
+      //
+      // if (!identityPublicKey) {
+      //   throw new Error(`Could not find identity public key with id ${form.keyId} in the identity ${form.identity}`)
+      // }
+      //
+      // const {identityContractNonce} = await PEApi.getIdentityContractNonce(DATA_CONTRACT_IDENTIFIER, form.identity)
+      //
+      // const data = {
+      //   name: form.name,
+      //   description: form.description,
+      //   magnet: form.magnet
+      // }
+      //
+      // console.log(JSON.stringify(data), DOCUMENT_TYPE, BigInt(identityContractNonce), DATA_CONTRACT_IDENTIFIER, form.identity)
+      // document = await window.dashPlatformSDK.documents.create(DATA_CONTRACT_IDENTIFIER, DOCUMENT_TYPE, data, BigInt(identityContractNonce), identity)
+      //
+      // console.log('document', document)
     } catch (e) {
       setError(e.toString())
       console.error('Error during submit:', e)
     }
   }
 
-  return <div>
-    <div className={"mb-6"}>
-      <button className={`rounded-xl mt-4 p-2 ml-2 ${action === 'create' ? 'bg-blue-700': 'bg-blue-400'}`}
-              onClick={() => setDocumentAction('create')}>Create torrent
-      </button>
-      <button className={`rounded-xl mt-4 p-2 ml-2 ${action === 'replace' ? 'bg-yellow-700': 'bg-yellow-400'}`}
-              onClick={() => setDocumentAction('replace')}>Update torrent</button>
-      <button className={`rounded-xl mt-4 p-2 ml-2 ${action === 'delete' ? 'bg-red-700': 'bg-red-400'}`}
-              onClick={() => setDocumentAction('delete')}>Delete torrent</button>
+  return (
+    <div className="bg-white dark:bg-gray-800 shadow-xl rounded-xl p-6 sm:p-8">
+      {/* Form Header */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          Add New Torrent
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400">
+          Share your torrent on the decentralized Dash Platform
+        </p>
+      </div>
+
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error during submit</h3>
+              <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                <p>{error}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Form Fields */}
+      {!error && (
+        <form className="space-y-6">
+
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="name"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+              onChange={(e) => handleInputChange('name', e)}
+              value={form.name}
+              placeholder="Enter torrent name"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Description <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="description"
+              rows="3"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors resize-none"
+              onChange={(e) => handleInputChange('description', e)}
+              value={form.description}
+              placeholder="Describe your torrent content"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="magnet" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Magnet Link <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="magnet"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors font-mono text-sm"
+              onChange={(e) => handleInputChange('magnet', e)}
+              value={form.magnet}
+              placeholder="magnet:?xt=urn:btih:...."
+              required
+            />
+          </div>
+
+          <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Identity Information</h3>
+
+            <div className="space-y-6">
+              <div>
+                <label htmlFor="identity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Identity <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="identity"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors font-mono text-sm"
+                  onChange={(e) => handleInputChange('identity', e)}
+                  value={form.identity}
+                  placeholder="BjixEUbqeUZK7BRdqtLgjzwFBovx4BRwS2iwhMriiYqp"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="keyId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Identity Public Key ID <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="keyId"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                    onChange={(e) => handleInputChange('keyId', e)}
+                    value={form.keyId}
+                    placeholder="1"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="privateKey" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Private Key <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    id="privateKey"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors font-mono text-sm"
+                    onChange={(e) => handleInputChange('privateKey', e)}
+                    value={form.privateKey}
+                    placeholder="Enter your private key"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-6 flex justify-end">
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all hover:shadow-lg"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Torrent
+            </button>
+          </div>
+        </form>
+      )}
     </div>
-    {error ? <div className={'leading-none font-normal text-lg pt-12'}>Error during submit: {error}</div> : <div/>}
-    {loading ? <div className={"leading-none font-normal text-lg pt-12"}>Loading WASM DPP</div> : <div/>}
-    {!loading && !error ? <div className={'flex flex-col'}>
-        {action !== 'create' ? <div>
-          <div className={'text-sm leading-none font-normal pb-2'}>Torrent Identifier:</div>
-          <input type={'text'} className={'border-2 border-gray-700 rounded-lg p-2 w-full'}
-                 onChange={(e) => handleInputChange('identifier', e)}
-                 value={form.identifier}
-                 placeholder={'5Quf1y4GrqygGLLUwNHntxHBCguvUiVaMv2kWh7HNFAd'}
-          />
-        </div> : <div/>}
-
-      <div>
-        <div className={'text-sm leading-none font-normal pb-2'}>Name:</div>
-        <input type={'text'} className={'border-2 border-gray-700 rounded-lg p-2 w-full'}
-               onChange={(e) => handleInputChange('name', e)}
-               value={form.name}
-               placeholder={'Torrent name'}
-        />
-      </div>
-
-      <div>
-        <div className={'text-sm leading-none font-normal pb-2 pt-2'}>Description:</div>
-        <input type={'text'} className={'border-2 border-gray-700 rounded-lg p-2 w-full'}
-               onChange={(e) => handleInputChange('description', e)}
-               value={form.description}
-               placeholder={"Description"}
-        />
-      </div>
-
-      <div>
-        <div className={'text-sm leading-none font-normal text-lg pb-2 pt-2'}>Magnet:</div>
-        <input type={'text'} className={'border-2 border-gray-700 rounded-lg p-2 w-full'}
-               onChange={(e) => handleInputChange('magnet', e)}
-               value={form.magnet}
-               placeholder={"magnet:?xt=urn:btih:...."}
-        />
-      </div>
-
-      <div>
-        <div className={'text-sm leading-none font-normal text-lg pb-2 pt-2'}>Identity:</div>
-        <input type={'text'} className={'border-2 border-gray-700 rounded-lg p-2 w-full'}
-               onChange={(e) => handleInputChange('identity', e)}
-               value={form.identity}
-               placeholder={"BjixEUbqeUZK7BRdqtLgjzwFBovx4BRwS2iwhMriiYqp"}
-        />
-      </div>
-
-      <div>
-        <div className={'text-sm leading-none font-normal text-lg pb-2 pt-2'}>Identity Public Key ID:</div>
-        <input type={'text'} className={'border-2 border-gray-700 rounded-lg p-2 w-full'}
-               onChange={(e) => handleInputChange('keyId', e)}
-               value={form.keyId}
-               placeholder={"1"}
-        />
-      </div>
-
-      <div>
-        <div className={'text-sm leading-none font-normal text-lg pb-2 pt-2'}>Private Key (from your identity):</div>
-        <input type={'text'} className={'border-2 border-gray-700 rounded-lg p-2 w-full'}
-               onChange={(e) => handleInputChange('privateKey', e)}
-               value={form.privateKey}
-               placeholder={"f00eab0432501e140cc00816a91934b2551564a05bd9176061b098e33112adf0"}
-        />
-      </div>
-
-      <div>
-        <button className={"rounded-xl bg-blue-300 mt-4 p-2"} onClick={handleSubmit}>Submit</button>
-      </div>
-    </div> : <div></div>}
-  </div>
+  )
 }
