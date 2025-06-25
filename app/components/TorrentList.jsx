@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import * as PEApi from '../utils/Api'
 import { Torrent } from '../models/Torrent.js'
-import TorrentListItem from './TorrentListItem.jsx'
 import TorrentTrackerHeader from './TorrentTrackerHeader.jsx'
 import { NavLink } from 'react-router'
+import { useSdk } from '../hooks/useSdk.js'
+import TorrentListItem from './TorrentListItem.jsx'
 
 export default function TorrentList () {
   const [torrents, setTorrents] = useState([])
@@ -12,24 +12,20 @@ export default function TorrentList () {
 
   useEffect(() => {
     setLoading(true)
-    PEApi.getDocumentsByDataContract('6hVQW16jyvZyGSQk2YVty4ND6bgFXozizYWnPt753uW5')
-      .then(result => {
-        const { resultSet } = result
 
-        setTorrents(resultSet.map(document => {
-          if(!document.data) {
-            return null
-          }
+    const dashPlatformSDK = useSdk()
 
-          const data = JSON.parse(document.data)
-          const {identifier, owner,  timestamp} = document
-          const { magnet, name, description } = data
+    const dataContract = '6hVQW16jyvZyGSQk2YVty4ND6bgFXozizYWnPt753uW5'
+    const documentType = 'torrent'
+    const limit = 100
 
-          return new Torrent(identifier, name, description, magnet, owner, timestamp)
-        }).filter(e => !!e))
-      })
-      .catch((e) => setError(e.toString()))
-      .finally(() => setLoading(false))
+    dashPlatformSDK.documents.query(dataContract, documentType, null, null, limit)
+      .then((documents) => setTorrents(documents.map(document => {
+        const properties = document.getProperties()
+        return new Torrent(document.getId().base58(), properties.name, properties.description, properties.magnet, document.getOwnerId().base58(), new Date(parseInt(document.getUpdatedAt().toString())))
+      })))
+     .catch(err => setError(err.toString()))
+     .finally(()=> setLoading(false))
   }, [])
 
   return (
