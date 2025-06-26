@@ -9,6 +9,10 @@ export default function TorrentList () {
   const [torrents, setTorrents] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [appConnected, setAppConnected] = useState(false)
+  const [accounts, setAccounts] = useState([])
+  const [selectedAccount, setSelectedAccount] = useState('')
+  const [connectWalletError, setConnectWalletError] = useState('')
 
   useEffect(() => {
     setLoading(true)
@@ -28,6 +32,43 @@ export default function TorrentList () {
      .finally(()=> setLoading(false))
   }, [])
 
+  useEffect(() => {
+  }, []);
+
+  const checkWalletConnection = async () => {
+    try {
+      setConnectWalletError('');
+
+      const dashPlatformSDK = useSdk()
+
+      const response = await dashPlatformSDK.signer.connect();
+
+      console.log(response)
+
+      if (response.status === 'approved') {
+        //const accountList = await dashPlatformSDK.wallet.accounts.list();
+        setAppConnected(true);
+        setAccounts(['asdfasdf']);
+        if (accountList.length > 0) {
+          setSelectedAccount(accountList[0]);
+        }
+      } else if(response.status === 'rejected') {
+        setConnectWalletError('Wallet connection is rejected');
+      } else if(response.status === 'error') {
+        setConnectWalletError('Error during wallet connection');
+      }
+    } catch (e) {
+      console.error(e);
+      setConnectWalletError('Error during wallet connection');
+    }
+  };
+
+  const handleConnectWallet = async () => {
+    const {dashPlatformSDK} = window
+
+    await checkWalletConnection();
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header Section */}
@@ -35,14 +76,42 @@ export default function TorrentList () {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <TorrentTrackerHeader/>
-            <NavLink to="/add" className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all hover:shadow-lg">
-                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Add Torrent
-              </button>
-            </NavLink>
+
+            {appConnected ? (
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {selectedAccount.label}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {selectedAccount.address && `${selectedAccount.address.substring(0, 8)}...${selectedAccount.address.substring(selectedAccount.address.length - 6)}`}
+                  </p>
+                </div>
+                <NavLink to="/add" className="w-full sm:w-auto">
+                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all hover:shadow-lg">
+                    <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Torrent
+                  </button>
+                </NavLink>
+              </div>
+            ) : (
+              <div className="w-full sm:w-auto flex flex-col items-end">
+                <button
+                  onClick={handleConnectWallet}
+                  className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all hover:shadow-lg"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Connect Wallet
+                </button>
+                {connectWalletError && (
+                  <div className="mt-2 text-sm text-red-600 dark:text-red-400">{connectWalletError}</div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
