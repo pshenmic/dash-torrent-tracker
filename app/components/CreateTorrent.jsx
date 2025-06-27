@@ -1,21 +1,12 @@
-import { useEffect, useState } from 'react'
-import * as PEApi from '../utils/Api'
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { DATA_CONTRACT_IDENTIFIER, DOCUMENT_TYPE } from '../constants.js'
 
-
-
-
-let dataContractFactory
-let dataContractFacade
-let documentFactory
-let identityPublicKeyClass
 
 export default function CreateTorrent ({walletInfo}) {
   let navigate = useNavigate();
 
   const [error, setError] = useState(null)
-  const [connectWalletError, setConnectWalletError] = useState('')
 
   const [form, setForm] = useState({
     name: '',
@@ -30,30 +21,12 @@ export default function CreateTorrent ({walletInfo}) {
     setForm({...form, [key]: e.target.value})
   }
 
-  const handleConnectWallet = async () => {
-    const {dashPlatformSDK} = window
-
-    setConnectWalletError('');
-
-    try {
-      const { identities, currentIdentity } = await dashPlatformSDK.signer.connect(window.location.origin)
-
-      setAppConnected(true);
-      setAccounts(identities);
-    } catch (err) {
-      console.error(err)
-      setConnectWalletError(err.message || 'Failed to connect to wallet. Please try again.');
-    }
-  }
-
   const handleSubmit = async e => {
 
     try {
       const {dashPlatformSDK} = window
 
       const identityContractNonce = await dashPlatformSDK.identities.getIdentityContractNonce(walletInfo.currentIdentity, DATA_CONTRACT_IDENTIFIER)
-
-      console.log(identityContractNonce)
 
       const data = {
         name: form.name,
