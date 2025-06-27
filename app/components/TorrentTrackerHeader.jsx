@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router'
 import ConnectWallet from './ConnectWallet.jsx'
 
-export default function TorrentTrackerHeader ({ walletInfo, setWalletInfo }) {
+export default function TorrentTrackerHeader ({ walletInfo, setWalletInfo, extensionInstalled }) {
   return (
     <div className="bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -25,7 +25,11 @@ export default function TorrentTrackerHeader ({ walletInfo, setWalletInfo }) {
                 </p>
               </div>
             </NavLink>
-            <ConnectWallet walletInfo={walletInfo} setWalletInfo={setWalletInfo}/>
+
+            {
+              extensionInstalled &&
+              <ConnectWallet walletInfo={walletInfo} setWalletInfo={setWalletInfo}/>
+             }
           </header>
         </div>
       </div>

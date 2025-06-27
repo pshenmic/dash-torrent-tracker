@@ -22,7 +22,6 @@ export default function CreateTorrent ({walletInfo}) {
   }
 
   const handleSubmit = async e => {
-
     try {
       const {dashPlatformSDK} = window
 

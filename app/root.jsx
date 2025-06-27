@@ -8,7 +8,7 @@ import {
 } from "react-router";
 
 import stylesheet from "./app.css?url";
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import TorrentTrackerHeader from './components/TorrentTrackerHeader.jsx'
 import { WalletInfo } from './models/WalletInfo.js'
 
@@ -46,9 +46,14 @@ export function Layout({ children }) {
 
 export default function App() {
   const [walletInfo, setWalletInfo] = useState(new WalletInfo(false, null, null))
+  const [extensionInstalled, setExtensionInstalled] = useState(false)
+
+  useEffect(() => {
+    setExtensionInstalled(!!window.dashPlatformSDK)
+  }, [])
 
   return <div>
-    <TorrentTrackerHeader walletInfo={walletInfo} setWalletInfo={setWalletInfo}/>
+    <TorrentTrackerHeader walletInfo={walletInfo} setWalletInfo={setWalletInfo} extensionInstalled={extensionInstalled} />
     <Outlet context={{walletInfo, setWalletInfo}}/>
   </div>;
 }

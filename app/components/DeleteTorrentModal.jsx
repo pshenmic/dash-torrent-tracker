@@ -36,8 +36,6 @@ export default function DeleteTorrentModal({ walletInfo, torrent, isOpen, onClos
 
       await dashPlatformSDK.signer.signAndBroadcast(stateTransition)
 
-      await onUpdate(torrent.identifier, form)
-
       await onDelete(torrent.identifier, { identity, keyId, privateKey })
       onClose()
     } catch (err) {
