@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function DeleteTorrentModal({ torrent, isOpen, onClose, onDelete }) {
+export default function DeleteTorrentModal({ walletInfo, torrent, isOpen, onClose, onDelete }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [confirmText, setConfirmText] = useState('')
@@ -16,7 +16,7 @@ export default function DeleteTorrentModal({ torrent, isOpen, onClose, onDelete 
 
     setLoading(true)
     setError(null)
-    
+
     try {
       // TODO: Implement actual delete logic
       await onDelete(torrent.identifier, { identity, keyId, privateKey })
@@ -33,11 +33,11 @@ export default function DeleteTorrentModal({ torrent, isOpen, onClose, onDelete 
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/50 z-40 transition-opacity"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="fixed inset-0 z-50 overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4">
@@ -216,4 +216,4 @@ export default function DeleteTorrentModal({ torrent, isOpen, onClose, onDelete 
       </div>
     </>
   )
-} 
+}

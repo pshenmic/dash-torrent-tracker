@@ -1,4 +1,6 @@
 import TorrentList from '../components/TorrentList.jsx'
+import TorrentTrackerHeader from '../components/TorrentTrackerHeader.jsx'
+import { useOutletContext } from 'react-router'
 
 export function meta() {
   return [
@@ -7,6 +9,11 @@ export function meta() {
   ];
 }
 
-export default function Home () {
-  return <TorrentList/>
+export default function Home ({}) {
+  const {walletInfo} = useOutletContext();
+
+  return <div>
+    {/* Header Section */}
+    <TorrentList walletInfo={walletInfo}/>
+  </div>
 }

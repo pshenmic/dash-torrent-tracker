@@ -8,6 +8,9 @@ import {
 } from "react-router";
 
 import stylesheet from "./app.css?url";
+import { useState } from 'react'
+import TorrentTrackerHeader from './components/TorrentTrackerHeader.jsx'
+import { WalletInfo } from './models/WalletInfo.js'
 
 export const links = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -42,7 +45,12 @@ export function Layout({ children }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const [walletInfo, setWalletInfo] = useState(new WalletInfo(false, null, null))
+
+  return <div>
+    <TorrentTrackerHeader walletInfo={walletInfo} setWalletInfo={setWalletInfo}/>
+    <Outlet context={{walletInfo, setWalletInfo}}/>
+  </div>;
 }
 
 export function ErrorBoundary({ error }) {

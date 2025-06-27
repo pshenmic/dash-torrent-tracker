@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
+import { DATA_CONTRACT_IDENTIFIER, DOCUMENT_TYPE } from '../constants.js'
+import { useSdk } from '../hooks/useSdk.js'
 
-export default function UpdateTorrentModal({ torrent, isOpen, onClose, onUpdate }) {
+export default function UpdateTorrentModal({ walletInfo, torrent, isOpen, onClose, onUpdate }) {
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -31,13 +33,39 @@ export default function UpdateTorrentModal({ torrent, isOpen, onClose, onUpdate 
     e.preventDefault()
     setLoading(true)
     setError(null)
-    
+
     try {
-      // TODO: Implement actual update logic
+      const  dashPlatformSDK  = useSdk()
+
+      const identityContractNonce = await dashPlatformSDK.identities.getIdentityContractNonce(walletInfo.currentIdentity, DATA_CONTRACT_IDENTIFIER)
+
+      console.log(identityContractNonce)
+
+      const data = {
+        name: form.name,
+        description: form.description,
+        magnet: form.magnet
+      }
+      const where =  [['$id', '==', torrent.identifier]]
+
+      const [document] = await dashPlatformSDK.documents.query(DATA_CONTRACT_IDENTIFIER, DOCUMENT_TYPE, where)
+
+      if (!document) {
+        return setError(`Could not fetch torrent with identifier ${torrent.identifier}`)
+      }
+
+      document.setProperties(data)
+
+      const stateTransition = await dashPlatformSDK.stateTransitions.documentsBatch.replace(document, identityContractNonce + 1n)
+
+      await dashPlatformSDK.signer.signAndBroadcast(stateTransition)
+
       await onUpdate(torrent.identifier, form)
+
       onClose()
-    } catch (err) {
-      setError(err.toString())
+    } catch (e) {
+      setError(e.toString())
+      console.error('Error during submit:', e)
     } finally {
       setLoading(false)
     }
@@ -48,11 +76,11 @@ export default function UpdateTorrentModal({ torrent, isOpen, onClose, onUpdate 
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/50 z-40 transition-opacity"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="fixed inset-0 z-50 overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4">
@@ -142,59 +170,6 @@ export default function UpdateTorrentModal({ torrent, isOpen, onClose, onUpdate 
                 />
               </div>
 
-              <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-4">Identity Information</h4>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="update-identity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Identity
-                    </label>
-                    <input
-                      type="text"
-                      id="update-identity"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors font-mono text-sm"
-                      onChange={(e) => handleInputChange('identity', e)}
-                      value={form.identity}
-                      placeholder="Enter your identity"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="update-keyId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Public Key ID
-                      </label>
-                      <input
-                        type="text"
-                        id="update-keyId"
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                        onChange={(e) => handleInputChange('keyId', e)}
-                        value={form.keyId}
-                        placeholder="1"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="update-privateKey" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Private Key
-                      </label>
-                      <input
-                        type="password"
-                        id="update-privateKey"
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors font-mono text-sm"
-                        onChange={(e) => handleInputChange('privateKey', e)}
-                        value={form.privateKey}
-                        placeholder="Enter your private key"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Footer */}
               <div className="flex justify-end gap-3 pt-6">
                 <button
@@ -234,4 +209,4 @@ export default function UpdateTorrentModal({ torrent, isOpen, onClose, onUpdate 
       </div>
     </>
   )
-} 
+}
