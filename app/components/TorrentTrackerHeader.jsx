@@ -11,7 +11,7 @@ export default function TorrentTrackerHeader ({ walletInfo, setWalletInfo, exten
               <div className="relative">
                 <div className="absolute inset-0 bg-primary-500/20 blur-xl rounded-full"/>
                 <img
-                  className="relative h-12 w-12 rounded-xl shadow-lg ring-1 ring-white/10"
+                  className="relative h-12 ring-1 ring-white/10"
                   src="/dash_logo.png"
                   alt="Dash Logo"
                 />
