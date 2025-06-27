@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useSdk } from '../hooks/useSdk.js'
+import { DATA_CONTRACT_IDENTIFIER, DOCUMENT_TYPE } from '../constants.js'
 
 export default function DeleteTorrentModal({ walletInfo, torrent, isOpen, onClose, onDelete }) {
   const [loading, setLoading] = useState(false)
@@ -18,7 +20,26 @@ export default function DeleteTorrentModal({ walletInfo, torrent, isOpen, onClos
     setError(null)
 
     try {
-      // TODO: Implement actual delete logic
+      const  dashPlatformSDK  = useSdk()
+
+      const identityContractNonce = await dashPlatformSDK.identities.getIdentityContractNonce(walletInfo.currentIdentity, DATA_CONTRACT_IDENTIFIER)
+
+      const where =  [['$id', '==', torrent.identifier]]
+
+      const [document] = await dashPlatformSDK.documents.query(DATA_CONTRACT_IDENTIFIER, DOCUMENT_TYPE, where)
+
+      if (!document) {
+        return setError(`Could not fetch torrent with identifier ${torrent.identifier}`)
+      }
+
+      const stateTransition = await dashPlatformSDK.stateTransitions.documentsBatch.delete(document, identityContractNonce + 1n)
+
+      await dashPlatformSDK.signer.signAndBroadcast(stateTransition)
+
+      await onUpdate(torrent.identifier, form)
+
+
+
       await onDelete(torrent.identifier, { identity, keyId, privateKey })
       onClose()
     } catch (err) {
@@ -114,53 +135,6 @@ export default function DeleteTorrentModal({ walletInfo, torrent, isOpen, onClos
 
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="delete-identity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Identity <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="delete-identity"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors font-mono text-sm"
-                      onChange={(e) => setIdentity(e.target.value)}
-                      value={identity}
-                      placeholder="Enter your identity"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="delete-keyId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Public Key ID <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        id="delete-keyId"
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                        onChange={(e) => setKeyId(e.target.value)}
-                        value={keyId}
-                        placeholder="1"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="delete-privateKey" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Private Key <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="password"
-                        id="delete-privateKey"
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors font-mono text-sm"
-                        onChange={(e) => setPrivateKey(e.target.value)}
-                        value={privateKey}
-                        placeholder="Enter your private key"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
                     <label htmlFor="confirm-delete" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Type <span className="font-bold">DELETE</span> to confirm
                     </label>
@@ -190,7 +164,7 @@ export default function DeleteTorrentModal({ walletInfo, torrent, isOpen, onClos
                   type="button"
                   onClick={handleDelete}
                   className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                  disabled={loading || confirmText !== 'DELETE' || !identity || !privateKey}
+                  disabled={loading || confirmText !== 'DELETE'}
                 >
                   {loading ? (
                     <>
