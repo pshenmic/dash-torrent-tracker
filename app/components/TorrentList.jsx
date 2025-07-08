@@ -19,10 +19,10 @@ export default function TorrentList ({walletInfo}) {
     const documentType = 'torrent'
     const limit = 100
 
-    dashPlatformSDK.documents.query(dataContract, documentType, null, null, limit)
+    dashPlatformSDK.documents.query(dataContract, documentType, undefined, undefined, limit)
       .then((documents) => setTorrents(documents.map(document => {
-        const properties = document.getProperties()
-        return new Torrent(document.getId().base58(), properties.name, properties.description, properties.magnet, document.getOwnerId().base58(), new Date(parseInt(document.getUpdatedAt().toString())))
+        const properties = document.properties
+        return new Torrent(document.id.base58(), properties.name, properties.description, properties.magnet, document.ownerId.base58(), new Date(parseInt(document.updatedAt.toString())))
       })))
       .catch(err => setError(err.toString()))
       .finally(() => setLoading(false))

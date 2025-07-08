@@ -13,15 +13,9 @@ export default function ConnectWallet ({ walletInfo, setWalletInfo }) {
         return setConnectWalletError('Dash Platform Extension is not installed')
       }
 
-      const response = await dashPlatformSDK.signer.connect()
+      const appConnectInfo = await dashPlatformSDK.signer.connect()
 
-      if (response.status === 'approved') {
-        setWalletInfo(new WalletInfo(true, response.identities, response.currentIdentity))
-      } else if (response.status === 'rejected') {
-        setConnectWalletError('Wallet connection was rejected.')
-      } else {
-        setConnectWalletError('An error occurred during wallet connection.')
-      }
+      setWalletInfo(new WalletInfo(true, appConnectInfo.identities, appConnectInfo.currentIdentity))
     } catch (e) {
       console.error(e)
       setConnectWalletError('An unexpected error occurred during wallet connection.')

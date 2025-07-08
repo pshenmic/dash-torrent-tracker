@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { DATA_CONTRACT_IDENTIFIER, DOCUMENT_TYPE } from '../constants.js'
 import { useSdk } from '../hooks/useSdk.js'
+import {BatchType} from 'pshenmic-dpp'
 
 export default function UpdateTorrentModal({ walletInfo, torrent, isOpen, onClose, onUpdate }) {
   const [form, setForm] = useState({
@@ -54,9 +55,9 @@ export default function UpdateTorrentModal({ walletInfo, torrent, isOpen, onClos
         return setError(`Could not fetch torrent with identifier ${torrent.identifier}`)
       }
 
-      document.setProperties(data)
+      document.properties = data
 
-      const stateTransition = await dashPlatformSDK.stateTransitions.documentsBatch.replace(document, identityContractNonce + 1n)
+      const stateTransition = await dashPlatformSDK.documents.createStateTransition(document, BatchType.Replace, identityContractNonce + 1n)
 
       await dashPlatformSDK.signer.signAndBroadcast(stateTransition)
 
