@@ -9,8 +9,4 @@ export default defineConfig({
       include: ['buffer'],
     })
   ],
-  mode: 'development',
-  build: {
-    minify: false
-  },
 });
