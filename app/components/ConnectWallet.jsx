@@ -9,11 +9,11 @@ export default function ConnectWallet ({ walletInfo, setWalletInfo }) {
     setConnectWalletError('')
 
     try {
-      if (!window.dashPlatformSDK) {
+      if (!window.dashPlatformExtension) {
         return setConnectWalletError('Dash Platform Extension is not installed')
       }
 
-      const appConnectInfo = await dashPlatformSDK.signer.connect()
+      const appConnectInfo = await window.dashPlatformExtension.signer.connect()
 
       setWalletInfo(new WalletInfo(true, appConnectInfo.identities, appConnectInfo.currentIdentity))
     } catch (e) {

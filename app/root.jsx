@@ -49,7 +49,7 @@ export default function App() {
   const [extensionInstalled, setExtensionInstalled] = useState(false)
 
   useEffect(() => {
-    if (window.dashPlatformSDK) {
+    if (window.dashPlatformExtension) {
       console.log('Dash Platform Extension detected')
       return setExtensionInstalled(true)
     }

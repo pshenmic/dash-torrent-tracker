@@ -36,7 +36,7 @@ export default function UpdateTorrentModal({ walletInfo, torrent, isOpen, onClos
     setError(null)
 
     try {
-      const  dashPlatformSDK  = useSdk()
+      const dashPlatformSDK  = useSdk()
 
       const identityContractNonce = await dashPlatformSDK.identities.getIdentityContractNonce(walletInfo.currentIdentity, DATA_CONTRACT_IDENTIFIER)
 
@@ -59,7 +59,7 @@ export default function UpdateTorrentModal({ walletInfo, torrent, isOpen, onClos
 
       const stateTransition = await dashPlatformSDK.documents.createStateTransition(document, BatchType.Replace, identityContractNonce + 1n)
 
-      await dashPlatformSDK.signer.signAndBroadcast(stateTransition)
+      await window.dashPlatformExtension.signer.signAndBroadcast(stateTransition)
 
       await onUpdate(torrent.identifier, form)
 
