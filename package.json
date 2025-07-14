@@ -12,6 +12,7 @@
     "@scure/base": "^1.2.4",
     "dash-platform-sdk": "^1.1.1",
     "isbot": "^5",
+    "pshenmic-dpp": "^1.0.13-rc.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router": "^7.6.3",
