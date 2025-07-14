@@ -4,9 +4,5 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   interop: "auto",
-  plugins: [reactRouter(), tailwindcss()],
-  mode: 'development',
-  build: {
-    minify: false
-  }
+  plugins: [reactRouter(), tailwindcss()]
 });
