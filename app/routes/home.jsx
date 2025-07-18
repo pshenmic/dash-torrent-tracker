@@ -1,5 +1,4 @@
 import TorrentList from '../components/TorrentList.jsx'
-import TorrentTrackerHeader from '../components/TorrentTrackerHeader.jsx'
 import { useOutletContext } from 'react-router'
 
 export function meta() {

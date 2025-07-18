@@ -121,7 +121,7 @@ export default function TorrentListItem ({ torrent, walletInfo }) {
             {/* Dropdown Menu */}
 
             {
-              walletInfo.connected && <div>
+              walletInfo.connected && torrent.owner === walletInfo.currentIdentity && <div>
                 <div className="relative">
                   <button
                     onClick={() => setShowDropdown(!showDropdown)}

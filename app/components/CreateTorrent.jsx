@@ -24,10 +24,20 @@ export default function CreateTorrent ({walletInfo}) {
 
   const handleSubmit = async e => {
     try {
-      const dashPlatformSDK = useSdk()
+      const sdk = useSdk()
       const {dashPlatformExtension} = window
 
-      const identityContractNonce = await dashPlatformSDK.identities.getIdentityContractNonce(walletInfo.currentIdentity, DATA_CONTRACT_IDENTIFIER)
+      let identityContractNonce
+
+      try {
+        identityContractNonce = await sdk.identities.getIdentityContractNonce(walletInfo.currentIdentity, DATA_CONTRACT_IDENTIFIER)
+      } catch (e) {
+        if (e.toString().startsWith('Error: Could not get identityContractNonce')) {
+          identityContractNonce = 0n
+        } else {
+          throw e
+        }
+      }
 
       const data = {
         name: form.name,
@@ -35,11 +45,10 @@ export default function CreateTorrent ({walletInfo}) {
         magnet: form.magnet
       }
 
-      const document = await dashPlatformSDK.documents.create(DATA_CONTRACT_IDENTIFIER, DOCUMENT_TYPE, data, walletInfo.currentIdentity, identityContractNonce + 1n)
-      const stateTransition = await dashPlatformSDK.stateTransitions.documentsBatch.create(document, identityContractNonce + 1n)
+      const document = await sdk.documents.create(DATA_CONTRACT_IDENTIFIER, DOCUMENT_TYPE, data, walletInfo.currentIdentity, identityContractNonce + 1n)
+      const stateTransition = await sdk.documents.createStateTransition(document, 0,identityContractNonce + 1n)
 
       await dashPlatformExtension.signer.signAndBroadcast(stateTransition)
-
 
       navigate("/");
     } catch (e) {

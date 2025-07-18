@@ -39,13 +39,12 @@ export default function UpdateTorrentModal({ walletInfo, torrent, isOpen, onClos
 
       const identityContractNonce = await dashPlatformSDK.identities.getIdentityContractNonce(walletInfo.currentIdentity, DATA_CONTRACT_IDENTIFIER)
 
-      console.log(identityContractNonce)
-
       const data = {
         name: form.name,
         description: form.description,
         magnet: form.magnet
       }
+
       const where =  [['$id', '==', torrent.identifier]]
 
       const [document] = await dashPlatformSDK.documents.query(DATA_CONTRACT_IDENTIFIER, DOCUMENT_TYPE, where)

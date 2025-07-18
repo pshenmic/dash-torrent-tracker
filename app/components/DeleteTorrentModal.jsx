@@ -20,7 +20,7 @@ export default function DeleteTorrentModal({ walletInfo, torrent, isOpen, onClos
     setError(null)
 
     try {
-      const  dashPlatformSDK  = useSdk()
+      const  dashPlatformSDK = useSdk()
 
       const identityContractNonce = await dashPlatformSDK.identities.getIdentityContractNonce(walletInfo.currentIdentity, DATA_CONTRACT_IDENTIFIER)
 
@@ -32,9 +32,9 @@ export default function DeleteTorrentModal({ walletInfo, torrent, isOpen, onClos
         return setError(`Could not fetch torrent with identifier ${torrent.identifier}`)
       }
 
-      const stateTransition = await dashPlatformSDK.stateTransitions.documentsBatch.delete(document, identityContractNonce + 1n)
+      const stateTransition = await dashPlatformSDK.documents.createStateTransition(document, 2,identityContractNonce + 1n)
 
-      await dashPlatformSDK.signer.signAndBroadcast(stateTransition)
+      await window.dashPlatformExtension.signer.signAndBroadcast(stateTransition)
 
       await onDelete(torrent.identifier, { identity, keyId, privateKey })
       onClose()
