@@ -8,7 +8,7 @@ import telegramIcon from '../../assets/socials/telegram.svg'
 const SOCIALS = [
   { icon: githubIcon, href: 'https://github.com/pshenmic/dash-torrent-tracker', label: 'GitHub' },
   { icon: xIcon, href: 'https://twitter.com/Dashpay', label: 'X' },
-  { icon: discordIcon, href: 'https://discord.gg/dash', label: 'Discord' },
+  { icon: discordIcon, href: 'https://discord.gg/yk5VQQag6n', label: 'Discord' },
   { icon: telegramIcon, href: 'https://t.me/dash_chat', label: 'Telegram' }
 ]
 
