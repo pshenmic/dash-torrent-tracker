@@ -31,13 +31,13 @@ interface FormErrors {
 }
 
 // Validation regex patterns (same as CreateTorrentModal)
-const NAME_REGEX = /^.{3,100}$/
+const NAME_REGEX = /^.{6,100}$/
 const DESCRIPTION_REGEX = /^[\s\S]{16,1000}$/
 const MAGNET_REGEX = /^magnet:\?xt=urn:btih:[a-zA-Z0-9]{32,40}/
 
 const validateName = (value: string): string | null => {
   if (!NAME_REGEX.test(value.trim())) {
-    return 'Name must be 3-100 characters'
+    return 'Name must be 6-100 characters'
   }
   return null
 }
